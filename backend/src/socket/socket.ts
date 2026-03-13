@@ -8,23 +8,19 @@ export const initSocket = (io: Server) => {
         console.log("User Connected",  socket.id) ;
 
         socket.on("draw", (data) => {
-            console.log("Listened the draw event") ;
-            console.log(data) ;
+            // console.log("Listened the draw event") ;
 
-            socket.send("ok, received the message", data) ;
+            socket.broadcast.emit("draw", data ) ;            
+
+        })
+
+        socket.on("undraw", () => {
+            socket.broadcast.emit("undraw") ;
         })
         
-
-        socket.on("disconnect", () => {
-            console.log("User disconnected") ;
+        socket.on("disconnect", (reason) => {
+            console.log("User disconnected because", reason) ;
 
         })
-
-
-
-
     })
-
-
-
 }

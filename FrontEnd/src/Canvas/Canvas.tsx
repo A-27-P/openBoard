@@ -1,11 +1,13 @@
 import "./Canvas.css"
 import { useEffect, useRef } from "react"
-
+import {socket} from "../Socket/socket"
 
 const Canvas = () => {
 
     const isDrawing = useRef(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const prevpoint = useRef<{x: number, y: number} | null> (null) ;
+
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
     const getMousePos = (e: any) => {
@@ -27,16 +29,51 @@ const Canvas = () => {
         }
     }
 
+    useEffect(() => {
+        
+        const handledraw = (data: any) => {
+            if(prevpoint.current) {
+                ctxRef.current?.beginPath() ;
+    
+                ctxRef.current?.moveTo(prevpoint.current.x, prevpoint.current.y) ;
+                ctxRef.current?.lineTo(data.x, data.y) ;
+                ctxRef.current?.stroke() ;
+
+            }
+            prevpoint.current = data ;
+        }
+        const handleundraw = () => {
+            prevpoint.current = null ;
+        }
+
+        socket.on("draw", handledraw) ;
+        socket.on("undraw" , handleundraw) ;
+
+        return () => {
+            socket.off("draw", handledraw) ; 
+            socket.off("undraw" , handleundraw) ;
+        }
+
+
+
+    },[])
+
+
+
+
+
 
 
     const startDrawing = (e: any) => {
         isDrawing.current = (true);
 
+        
         console.log("Started drawing");
-
+        
         ctxRef.current?.beginPath();
         const { x, y } = getMousePos(e);
         ctxRef.current?.moveTo(x, y);
+        socket.emit("draw", {x, y}) ;
     }
 
     const drawing = (e: any) => {
@@ -49,13 +86,14 @@ const Canvas = () => {
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
         ctxRef.current.stroke();
+        socket.emit("draw", {x, y}) ;
 
     }
 
     const stopDrawing = () => {
         isDrawing.current = (false);
-
         console.log("Drawing Stopped");
+        socket.emit("undraw") ;
     }
 
 
