@@ -8,7 +8,24 @@ const Canvas = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
+    const getMousePos = (e: any) => {
+        const canvas = canvasRef.current!
 
+
+        const rect = canvas.getBoundingClientRect()
+
+        const scaleX = canvas.width / rect.width
+        const scaleY = canvas.height / rect.height
+
+        const x = (e.clientX - rect.left) * scaleX
+        const y = (e.clientY - rect.top) * scaleY
+
+
+        return {
+            x,
+            y
+        }
+    }
 
 
 
@@ -18,7 +35,8 @@ const Canvas = () => {
         console.log("Started drawing");
 
         ctxRef.current?.beginPath();
-        ctxRef.current?.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        const { x, y } = getMousePos(e);
+        ctxRef.current?.moveTo(x, y);
     }
 
     const drawing = (e: any) => {
@@ -28,9 +46,10 @@ const Canvas = () => {
 
         // console.log("drawing");
         if (!ctxRef.current) return;
-        ctxRef.current.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
+        const { x, y } = getMousePos(e);
+        ctxRef.current.lineTo(x, y);
         ctxRef.current.stroke();
-        console.log(e.nativeEvent.offsetX, e.nativeEvent.offsetY)
+
     }
 
     const stopDrawing = () => {
@@ -51,7 +70,6 @@ const Canvas = () => {
         ctx.lineWidth = 5;
         ctx.lineCap = "round";
         ctx.strokeStyle = "white"
-
 
         ctxRef.current = ctx;
 
