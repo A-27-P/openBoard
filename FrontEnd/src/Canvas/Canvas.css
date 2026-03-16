@@ -1,6 +1,88 @@
 .canvas {
     background-color: black;
+    height: 100%;
+    width: 100%;
+    
+}
+
+.canvas-page-div {
+    box-sizing: border-box;
+    /* background-color: red;  */
     height: 100vh;
     width: 100vw;
+    padding: 10px;
+}
+
+.canvas-header {
+    height: 6rem;
+    background-color: rgb(31, 31, 31);
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    font-size: 25px ;
+    font-family: "Fira Code", monospace;
+}
+
+.rooms-join {
+    width: 30rem;
+    /* background-color: yellow; */
+    border: 1px dashed black;
+    height: 100%;
+    padding: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
     
+    
+}
+.roomjoin {
+    display: flex;
+    /* background-color: pink; */
+    justify-content: space-around;
+    gap: 30px;
+    align-items: center;
+    width: 70%;
+
+
+}
+.textinput input {
+    background-color: aliceblue;
+    border: none;
+    border-radius: 10px;
+    width: 8rem;
+    font-size: 20px;
+    padding: 5px;
+    color: red;
+    text-align: center;
+    height: 1.5rem;
+    text-transform: uppercase;
+}
+.joinroombutton {
+    color: black;
+    background-color: white;
+    font-size: 20px;
+    border-radius: 10px;
+    border: 1px solid white;
+
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+}
+.joinroombutton:hover {
+
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+}
+
+
+
+.invite-code {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    color: white;
 }

@@ -1,5 +1,5 @@
 import "./Canvas.css"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import {socket} from "../Socket/socket"
 
 const Canvas = () => {
@@ -7,6 +7,9 @@ const Canvas = () => {
     const isDrawing = useRef(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const prevpoint = useRef<{x: number, y: number} | null> (null) ;
+    const [codeinpout, setcodeinput] = useState<string>("") ;
+    const [invitecode, setinvitecode] = useState<string>("-") ;
+
 
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -46,12 +49,34 @@ const Canvas = () => {
             prevpoint.current = null ;
         }
 
+        const setcode = (code: string) => {
+            setinvitecode(code) ;
+        }
+
+        const handlejoinrequest = (socketid: string) => {
+
+            alert(`${socketid} wants to join`) ;
+            
+
+
+        }
+
+        
+
+
         socket.on("draw", handledraw) ;
         socket.on("undraw" , handleundraw) ;
+        socket.on("board-created", setcode) ;
+
+        socket.on("join-request", handlejoinrequest) ;
+
+
 
         return () => {
             socket.off("draw", handledraw) ; 
             socket.off("undraw" , handleundraw) ;
+            socket.off("board-created", setcode) ;
+            socket.off("join-request", handlejoinrequest) ;
         }
 
 
@@ -86,14 +111,14 @@ const Canvas = () => {
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
         ctxRef.current.stroke();
-        socket.emit("draw", {x, y}) ;
+        socket.emit("draw", {x, y, invitecode}) ;
 
     }
 
     const stopDrawing = () => {
         isDrawing.current = (false);
         console.log("Drawing Stopped");
-        socket.emit("undraw") ;
+        socket.emit("undraw", (invitecode)) ;
     }
 
 
@@ -113,13 +138,46 @@ const Canvas = () => {
 
     }, [])
 
+    useEffect(() => {
+        socket.emit("create-board") ;
+    }, [])
+
+    const joinroomfun = () => {
+        if(codeinpout.length !== 6) {
+            alert("Please Enter the 6 digit code !") ;
+            return ;
+        }
+
+
+        socket.emit("join-request", codeinpout) ;
+    
+
+    }
+
 
 
 
     return (
-        <div>
+        <div className="canvas-page-div">
 
+            <div className="canvas-header">
+                <div className="rooms-join">
+                    <div className="invite-code">
+                        Invite Code: {invitecode}
+                    </div>
+                    <div className="roomjoin">
+                        <div className="textinput">
+                            <input type="text" onChange={(e) => setcodeinput(e.target.value)}/>
+                        </div>
+                        <div className="joinroombutton"
+                        onClick={joinroomfun}
+                        >
+                            Join Board
+                        </div>
+                    </div>
 
+                </div>
+            </div>
 
 
             <canvas className="canvas"
