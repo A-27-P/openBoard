@@ -1,7 +1,58 @@
 .popup-main {
-    width: 10rem ;
-    height: 5rem;
+    width: 15rem ;
+    height: 6rem;
     /* background-color: red; */
+    border: 1px solid white;
+    border-radius: 10px;
     color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    gap: 10px;
 
+}
+
+.popup-heading {
+    font-size: 18px;
+    
+    /* background-color: yellow; */
+    height: 10rem;
+    width:  100%;
+    display: flex;
+    align-items: center ;
+    justify-content: center;
+}
+
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    /* background-color: pink; */
+    height: 2rem;
+    width: 80%;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}   
+
+
+.accept-button, .reject-button {
+    width: 6rem;
+    height: 2rem;
+    border: 1px solid white;
+    background-color: pink;
+    border-radius: 10px;
+    color: white;
+    
+}
+
+.accept-button {
+    background-color: green
+    
+
+}
+
+.reject-button {
+    background-color: red;
 }

@@ -12,7 +12,7 @@ const Canvas = () => {
     const prevpoint = useRef<{ x: number, y: number } | null>(null);
     const [codeinpout, setcodeinput] = useState<string>("");
     const [invitecode, setinvitecode] = useState<string>("-");
-
+    const [requests, setrequests] = useState<{userId : string}[]>([])
     const socket = useSocket();
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -33,6 +33,17 @@ const Canvas = () => {
             x,
             y
         }
+    }
+
+    const acceptrequest = (userId: string, roomCode: string) => {
+        socket.current?.emit("accept-request", {userId, roomCode})
+        setrequests(requests.filter((item) => item.userId !== userId)) ;
+    }
+    const rejectrequest = (userId: string, roomCode: string) => {
+        
+        socket.current?.emit("reject-request", {userId, roomCode}) ;
+
+        setrequests(requests.filter((item) => item.userId !== userId)) ;
     }
 
     useEffect(() => {
@@ -58,23 +69,31 @@ const Canvas = () => {
             setinvitecode(code);
         }
 
-        const handlejoinrequest = (userID: string) => {
+        const handlejoinrequest = (userID: string, roomCode: string) => {
 
-            alert(`${userID} wants to join`); // render the ask component here.
+            // alert(`${userID} wants to join`); // render the ask component here.
+
+            setrequests((prev) => [...prev, {userId: userID}]) ;
+            console.log(requests) ;
 
 
 
         }
 
+        const handleroomjoined = (roomCode: string) => {
+            alert(`${roomCode} joined successfully`); 
+        }
 
-
+        const handlenotjoined = (roomCode: string) => {
+            alert(`${roomCode} joined rejected`); 
+        }
 
         socket.current?.on("draw", handledraw);
         socket.current?.on("undraw", handleundraw);
         socket.current?.on("board-created", setcode);
-
+        socket.current?.on("joined-room", handleroomjoined) ;
         socket.current?.on("join-request", handlejoinrequest);
-
+        socket.current?.on("not-joined-room", handlenotjoined)
 
 
         return () => {
@@ -82,6 +101,8 @@ const Canvas = () => {
             socket.current?.off("undraw", handleundraw);
             socket.current?.off("board-created", setcode);
             socket.current?.off("join-request", handlejoinrequest);
+            socket.current?.off("joined-room", handleroomjoined) ;
+            socket.current?.off("not-joined-room", handlenotjoined)
         }
 
 
@@ -184,7 +205,19 @@ const Canvas = () => {
                 </div>
 
                 <div className="request-popup">
-                   <PopUp />
+                    {
+                        requests.length === 0 ? <></> : 
+                        requests.map((userIds, index) => (
+                            <PopUp userId={userIds.userId} key={index}
+                                acceptrequest = {acceptrequest} 
+                                rejectrequest= {rejectrequest}
+
+
+                            />
+                        ))
+                        
+
+                    }
                 </div>
             </div>
 

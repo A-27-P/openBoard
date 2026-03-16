@@ -16,11 +16,14 @@ function generateCode() {
 }
 
 
-
+interface Roomtype {
+    owner : string, 
+    collaborators : Set<string>
+}
 
 const idTosocket = new Map() ;
 const socketToid = new Map() ;
-const rooms = new Map() ;
+const rooms = new Map<string, Roomtype>() ;
 
 export const initSocket = (io: Server) => {
     
@@ -29,7 +32,7 @@ export const initSocket = (io: Server) => {
         
         console.log("User Connected",  socket.id) ;
         socket.data.userId = socket.handshake.auth.id ;
-        console.log("✅",socket.handshake) ;
+        // console.log("✅",socket.handshake) ;
         idTosocket.set(socket.data.userId, socket.id) ;
         idTosocket.set(socket.id, socket.data.userId) ;
 
@@ -58,10 +61,11 @@ export const initSocket = (io: Server) => {
 
             rooms.set(code, {
                 owner: socket.data.userId,
+                collaborators : new Set([socket.data.userId]) 
             })
 
             socket.data.roomcode = code ;
-            console.log(rooms) ;
+            // console.log(rooms) ;
             
 
             socket.emit("board-created", code) ;
@@ -70,7 +74,7 @@ export const initSocket = (io: Server) => {
 
         socket.on("request-join", (code: string) => {
             code = code.toUpperCase() ;
-            console.log(code) ;
+            // console.log(code) ;
             // console.log(boards) ;
 
             
@@ -79,12 +83,36 @@ export const initSocket = (io: Server) => {
                 socket.emit("No Room exists") ;
                 return ;
             }
-            console.log(room) ;
+            // console.log(room) ;
             io.to(idTosocket.get(room.owner)).emit("join-request", {
-                userId : socket.data.userId
+                userId : socket.data.userId,
+                roomCode: code 
             })
 
 
+        })
+
+        socket.on("accept-request",({userId, roomCode}) => {
+            const room = rooms.get(userId.roomCode) ;
+            room?.collaborators.add(userId.userId) ;
+            // console.log(room) ;
+            console.log(userId) ;
+            // console.log(roomCode) ;
+            const socketid = idTosocket.get(userId.userId) ;
+            const usersocket = io.sockets.sockets.get(socketid) ;
+            // console.log(usersocket) ;
+            if(! usersocket) return ;
+            usersocket.data.roomcode = userId.roomCode ;
+            usersocket?.join(userId.roomCode) ;
+            console.log("inside the accept-request") ;
+            io.to(socketid).emit("joined-room", userId.roomCode) ;
+
+        })
+
+        socket.on("reject-request", ({userId}) => {
+            console.log(userId) ;
+            const socketid = idTosocket.get(userId.userId) ;
+            io.to(socketid).emit("not-joined-room", userId.roomCode) ;
         })
 
 

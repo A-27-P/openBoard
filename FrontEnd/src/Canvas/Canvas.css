@@ -90,10 +90,10 @@
 }
 
 .request-popup {
-    background-color: red;
+    /* background-color: red; */
     position: absolute;
     top: 10rem;
     right: 1rem;
-    height: 10rem;
-    width: 5rem;
+    /* height: 10rem;
+    width: 5rem; */
 }
