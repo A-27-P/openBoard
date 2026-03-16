@@ -84,35 +84,40 @@ export const initSocket = (io: Server) => {
                 return ;
             }
             // console.log(room) ;
-            io.to(idTosocket.get(room.owner)).emit("join-request", {
-                userId : socket.data.userId,
+            // console.log("💕",socket.data.userId) ;
+
+            io.to(idTosocket.get(room.owner)).emit("join-request", ({
+                userID: socket.data.userId,
                 roomCode: code 
-            })
+            })) ;
 
 
         })
 
         socket.on("accept-request",({userId, roomCode}) => {
-            const room = rooms.get(userId.roomCode) ;
-            room?.collaborators.add(userId.userId) ;
+            // console.log("socket", socket.data)
+            // console.log("userID: ",userId) ;
+            // console.log("roomCode: ", roomCode) ;
+            const room = rooms.get(roomCode) ;
+            room?.collaborators.add(userId) ;
             // console.log(room) ;
-            console.log(userId) ;
+            // console.log(userId) ;
             // console.log(roomCode) ;
-            const socketid = idTosocket.get(userId.userId) ;
+            const socketid = idTosocket.get(userId) ;
             const usersocket = io.sockets.sockets.get(socketid) ;
             // console.log(usersocket) ;
             if(! usersocket) return ;
-            usersocket.data.roomcode = userId.roomCode ;
-            usersocket?.join(userId.roomCode) ;
-            console.log("inside the accept-request") ;
-            io.to(socketid).emit("joined-room", userId.roomCode) ;
+            usersocket.data.roomcode = roomCode ;
+            usersocket?.join(roomCode) ;
+            // console.log("inside the accept-request") ;
+            io.to(socketid).emit("joined-room", roomCode) ;
 
         })
 
-        socket.on("reject-request", ({userId}) => {
+        socket.on("reject-request", ({userId, roomCode}: {userId: string, roomCode: string}) => {
             console.log(userId) ;
-            const socketid = idTosocket.get(userId.userId) ;
-            io.to(socketid).emit("not-joined-room", userId.roomCode) ;
+            const socketid = idTosocket.get(userId) ;
+            io.to(socketid).emit("not-joined-room",roomCode) ;
         })
 
 

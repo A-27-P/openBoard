@@ -12,7 +12,7 @@ const Canvas = () => {
     const prevpoint = useRef<{ x: number, y: number } | null>(null);
     const [codeinpout, setcodeinput] = useState<string>("");
     const [invitecode, setinvitecode] = useState<string>("-");
-    const [requests, setrequests] = useState<{userId : string}[]>([])
+    const [requests, setrequests] = useState<{userId : string, roomCode: string}[]>([])
     const socket = useSocket();
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -36,11 +36,15 @@ const Canvas = () => {
     }
 
     const acceptrequest = (userId: string, roomCode: string) => {
-        socket.current?.emit("accept-request", {userId, roomCode})
+        const data = {
+            userId,
+            roomCode
+        }
+        socket.current?.emit("accept-request", data)
         setrequests(requests.filter((item) => item.userId !== userId)) ;
     }
     const rejectrequest = (userId: string, roomCode: string) => {
-        
+
         socket.current?.emit("reject-request", {userId, roomCode}) ;
 
         setrequests(requests.filter((item) => item.userId !== userId)) ;
@@ -69,11 +73,12 @@ const Canvas = () => {
             setinvitecode(code);
         }
 
-        const handlejoinrequest = (userID: string, roomCode: string) => {
+        const handlejoinrequest = ({userID, roomCode} : {userID: string, roomCode: string}) => {
 
             // alert(`${userID} wants to join`); // render the ask component here.
-
-            setrequests((prev) => [...prev, {userId: userID}]) ;
+            console.log(userID) ;
+            console.log(roomCode) ;
+            setrequests((prev) => [...prev, {userId: userID, roomCode: roomCode}]) ;
             console.log(requests) ;
 
 
@@ -209,6 +214,7 @@ const Canvas = () => {
                         requests.length === 0 ? <></> : 
                         requests.map((userIds, index) => (
                             <PopUp userId={userIds.userId} key={index}
+                            roomCode = {userIds.roomCode}
                                 acceptrequest = {acceptrequest} 
                                 rejectrequest= {rejectrequest}
 
