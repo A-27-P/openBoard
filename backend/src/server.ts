@@ -3,6 +3,7 @@ import http from "http"
 import dotenv from 'dotenv'
 import {Server} from "socket.io"
 import { initSocket } from "./socket/socket.js"
+import connectDb from "./Config/mongoConfig.js"
 
 
 dotenv.config() 
@@ -17,11 +18,18 @@ const io = new Server(server, {
     }
 })
 
-initSocket(io) ; 
 
 
 
-server.listen(PORT, () => {
-    console.log(`Server is running on PORT: ${PORT}` )
-})
+
+try {
+    initSocket(io) ; 
+    connectDb() ;
+    server.listen(PORT, () => {
+        console.log(`Server is running on PORT: ${PORT}` )
+    })
+
+} catch(err) {
+    console.log(`Error while starting the server: ${err}`) ;
+}
 
