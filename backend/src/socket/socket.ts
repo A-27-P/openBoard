@@ -16,7 +16,11 @@ function generateCode() {
 }
 
 
-const boards = new Map() ;
+
+
+const idTosocket = new Map() ;
+const socketToid = new Map() ;
+const rooms = new Map() ;
 
 export const initSocket = (io: Server) => {
     
@@ -24,6 +28,11 @@ export const initSocket = (io: Server) => {
     io.on("connection", (socket) => {
         
         console.log("User Connected",  socket.id) ;
+        socket.data.userId = socket.handshake.auth.id ;
+        console.log("✅",socket.handshake) ;
+        idTosocket.set(socket.data.userId, socket.id) ;
+        idTosocket.set(socket.id, socket.data.userId) ;
+
 
         socket.on("draw", (data) => {
             // console.log("Listened the draw event") ;
@@ -47,24 +56,34 @@ export const initSocket = (io: Server) => {
 
             socket.join(code) ;
 
-            boards.set(code, {
-                owner : socket.id 
+            rooms.set(code, {
+                owner: socket.data.userId,
             })
-            console.log(boards) ;
+
+            socket.data.roomcode = code ;
+            console.log(rooms) ;
+            
 
             socket.emit("board-created", code) ;
         })
 
 
-        socket.on("join-request", (code: string) => {
+        socket.on("request-join", (code: string) => {
             code = code.toUpperCase() ;
             console.log(code) ;
-            console.log(boards) ;
-            if(! boards.get(code)) {
+            // console.log(boards) ;
+
+            
+            const room = rooms.get(code) ;
+            if(! room ) {
+                socket.emit("No Room exists") ;
                 return ;
             }
-            io.to(boards.get(code).owner).emit("join-request", socket.id) ;
-            
+            console.log(room) ;
+            io.to(idTosocket.get(room.owner)).emit("join-request", {
+                userId : socket.data.userId
+            })
+
 
         })
 

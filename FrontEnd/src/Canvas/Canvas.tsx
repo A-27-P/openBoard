@@ -1,16 +1,19 @@
 import "./Canvas.css"
 import { useEffect, useRef, useState } from "react"
-import {socket} from "../Socket/socket"
+import { useSocket } from "../Socket/socket"
+import PopUp from "./popUp";
+
 
 const Canvas = () => {
 
+
     const isDrawing = useRef(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const prevpoint = useRef<{x: number, y: number} | null> (null) ;
-    const [codeinpout, setcodeinput] = useState<string>("") ;
-    const [invitecode, setinvitecode] = useState<string>("-") ;
+    const prevpoint = useRef<{ x: number, y: number } | null>(null);
+    const [codeinpout, setcodeinput] = useState<string>("");
+    const [invitecode, setinvitecode] = useState<string>("-");
 
-
+    const socket = useSocket();
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
     const getMousePos = (e: any) => {
@@ -33,55 +36,57 @@ const Canvas = () => {
     }
 
     useEffect(() => {
-        
+
+        if (!socket) return;
+
         const handledraw = (data: any) => {
-            if(prevpoint.current) {
-                ctxRef.current?.beginPath() ;
-    
-                ctxRef.current?.moveTo(prevpoint.current.x, prevpoint.current.y) ;
-                ctxRef.current?.lineTo(data.x, data.y) ;
-                ctxRef.current?.stroke() ;
+            if (prevpoint.current) {
+                ctxRef.current?.beginPath();
+
+                ctxRef.current?.moveTo(prevpoint.current.x, prevpoint.current.y);
+                ctxRef.current?.lineTo(data.x, data.y);
+                ctxRef.current?.stroke();
 
             }
-            prevpoint.current = data ;
+            prevpoint.current = data;
         }
         const handleundraw = () => {
-            prevpoint.current = null ;
+            prevpoint.current = null;
         }
 
         const setcode = (code: string) => {
-            setinvitecode(code) ;
+            setinvitecode(code);
         }
 
-        const handlejoinrequest = (socketid: string) => {
+        const handlejoinrequest = (userID: string) => {
 
-            alert(`${socketid} wants to join`) ;
-            
+            alert(`${userID} wants to join`); // render the ask component here.
+
 
 
         }
 
-        
 
 
-        socket.on("draw", handledraw) ;
-        socket.on("undraw" , handleundraw) ;
-        socket.on("board-created", setcode) ;
 
-        socket.on("join-request", handlejoinrequest) ;
+        socket.current?.on("draw", handledraw);
+        socket.current?.on("undraw", handleundraw);
+        socket.current?.on("board-created", setcode);
+
+        socket.current?.on("join-request", handlejoinrequest);
 
 
 
         return () => {
-            socket.off("draw", handledraw) ; 
-            socket.off("undraw" , handleundraw) ;
-            socket.off("board-created", setcode) ;
-            socket.off("join-request", handlejoinrequest) ;
+            socket.current?.off("draw", handledraw);
+            socket.current?.off("undraw", handleundraw);
+            socket.current?.off("board-created", setcode);
+            socket.current?.off("join-request", handlejoinrequest);
         }
 
 
 
-    },[])
+    }, [])
 
 
 
@@ -92,13 +97,13 @@ const Canvas = () => {
     const startDrawing = (e: any) => {
         isDrawing.current = (true);
 
-        
+
         console.log("Started drawing");
-        
+
         ctxRef.current?.beginPath();
         const { x, y } = getMousePos(e);
         ctxRef.current?.moveTo(x, y);
-        socket.emit("draw", {x, y}) ;
+        socket.current?.emit("draw", { x, y });
     }
 
     const drawing = (e: any) => {
@@ -111,14 +116,14 @@ const Canvas = () => {
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
         ctxRef.current.stroke();
-        socket.emit("draw", {x, y, invitecode}) ;
+        socket.current?.emit("draw", { x, y, invitecode });
 
     }
 
     const stopDrawing = () => {
         isDrawing.current = (false);
         console.log("Drawing Stopped");
-        socket.emit("undraw", (invitecode)) ;
+        socket.current?.emit("undraw", (invitecode));
     }
 
 
@@ -139,18 +144,18 @@ const Canvas = () => {
     }, [])
 
     useEffect(() => {
-        socket.emit("create-board") ;
+        socket.current?.emit("create-board");
     }, [])
 
     const joinroomfun = () => {
-        if(codeinpout.length !== 6) {
-            alert("Please Enter the 6 digit code !") ;
-            return ;
+        if (codeinpout.length !== 6) {
+            alert("Please Enter the 6 digit code !");
+            return;
         }
 
 
-        socket.emit("join-request", codeinpout) ;
-    
+        socket.current?.emit("request-join", codeinpout);
+
 
     }
 
@@ -167,17 +172,23 @@ const Canvas = () => {
                     </div>
                     <div className="roomjoin">
                         <div className="textinput">
-                            <input type="text" onChange={(e) => setcodeinput(e.target.value)}/>
+                            <input type="text" onChange={(e) => setcodeinput(e.target.value)} />
                         </div>
                         <div className="joinroombutton"
-                        onClick={joinroomfun}
+                            onClick={joinroomfun}
                         >
                             Join Board
                         </div>
                     </div>
 
                 </div>
+
+                <div className="request-popup">
+                   <PopUp />
+                </div>
             </div>
+
+
 
 
             <canvas className="canvas"

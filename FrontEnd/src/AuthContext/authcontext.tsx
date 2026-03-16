@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react"
 import { myapi } from "../Services/api";
 
-interface AuthType {
+export interface AuthType {
     islogin: boolean,
     login: Function,
     logout: Function,
     loading: any,
-    _id: String
+    _id: String | null 
 }
 
 const AuthContext = createContext<AuthType | null>(null);
@@ -16,8 +16,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [islogin, setislogin] = useState(false);
     const [loading, setloading] = useState<boolean>(true);
+    const [_id, setid] = useState<String | null>(null) ;
 
-    let _id = "";
 
     useEffect(() => {
         const run = async () => {
@@ -25,12 +25,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setloading(true);
                 const response = await myapi.get("/auth/checkme");
                 // console.log(response.data.user.role) ;
-                _id = response.data.user._id;
+                console.log(response.data) ;
+                setid(response.data.user._id) ;
                 setislogin(true);
 
             }
             catch (err) {
-                _id = "";
+                setid("") ;
                 setislogin(false);
                 setloading(false);
             }
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 
     function login(id:string) {
-        _id = id ;
+        setid(id) ;
         setislogin(true);
     }
     function logout() {
@@ -68,8 +69,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
+    if(! context) throw new Error("no auth context is there") ;
 
-
-    return context;
+    return context ;
 
 }
