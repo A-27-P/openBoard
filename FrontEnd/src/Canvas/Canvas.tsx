@@ -2,20 +2,40 @@ import "./Canvas.css"
 import { useEffect, useRef, useState } from "react"
 import { useSocket } from "../Socket/socket"
 import PopUp from "./popUp";
+import { useAuth } from "../AuthContext/authcontext";
 
+interface point {
+    x: number, 
+    y: number
+}
+
+interface Stroke {
+    strokeWidth: number, 
+    strokeColor: string, 
+    madeBy: string,
+    points: point[]    
+}
 
 const Canvas = () => {
 
+    const auth = useAuth() ;
 
     const isDrawing = useRef(false);
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const prevpoint = useRef<{ x: number, y: number } | null>(null);
     const [codeinpout, setcodeinput] = useState<string>("");
+
+    const currentStroke = useRef<Stroke | null> (null) ;
+
     const [invitecode, setinvitecode] = useState<string>("-");
     const [requests, setrequests] = useState<{userId : string, roomCode: string}[]>([])
     const socket = useSocket();
     const [roomjoined, setroomjoined] = useState<string | null> (null) ;
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+
+
+
+
 
     const getMousePos = (e: any) => {
         const canvas = canvasRef.current!
@@ -35,6 +55,35 @@ const Canvas = () => {
             y
         }
     }
+
+    const drawthestrokes = (strokes: Array<Stroke>) => {
+
+        if(ctxRef.current === null) return ;
+
+        if(strokes.length === 0) return ;
+
+
+        
+
+        for(let i =0; i < (strokes.length); i ++) {
+            
+            ctxRef.current?.beginPath() ;
+            if(strokes[i].points.length === 0) continue ;
+            ctxRef.current?.moveTo(strokes[i].points[0].x, strokes[i].points[0].y) ;
+            
+            ctxRef.current.lineWidth = 5;
+            ctxRef.current.lineCap = "round";
+            ctxRef.current.strokeStyle = "white"
+            for(let j = 1; j < strokes[i].points.length; j ++) {
+                ctxRef.current?.lineTo(strokes[i].points[j].x, strokes[i].points[j].y) ;
+            }
+            ctxRef.current?.stroke() ;
+
+        }
+
+
+    }
+
 
     const acceptrequest = (userId: string, roomCode: string) => {
         const data = {
@@ -88,9 +137,12 @@ const Canvas = () => {
 
         }
 
-        const handleroomjoined = (roomCode: string) => {
+        const handleroomjoined = (roomCode: string, strokes: Array<Stroke>) => {
             alert(`${roomCode} joined successfully`); 
+            console.log(strokes) ;
+            drawthestrokes(strokes) ;
             setroomjoined(roomCode) ;
+
         }
 
         const handlenotjoined = (roomCode: string) => {
@@ -133,6 +185,12 @@ const Canvas = () => {
         ctxRef.current?.beginPath();
         const { x, y } = getMousePos(e);
         ctxRef.current?.moveTo(x, y);
+        currentStroke.current = {
+            strokeColor:"white", 
+            strokeWidth: 5, 
+            points : [{x, y}], 
+            madeBy: auth._id as string
+        }
         socket.current?.emit("draw", { x, y });
     }
 
@@ -145,6 +203,7 @@ const Canvas = () => {
         if (!ctxRef.current) return;
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
+        currentStroke.current?.points.push({x, y}) ;
         ctxRef.current.stroke();
         socket.current?.emit("draw", { x, y, invitecode });
 
@@ -153,7 +212,8 @@ const Canvas = () => {
     const stopDrawing = () => {
         isDrawing.current = (false);
         console.log("Drawing Stopped");
-        socket.current?.emit("undraw", (invitecode));
+        socket.current?.emit("undraw", invitecode, currentStroke.current);
+        currentStroke.current = null ;
     }
 
 
@@ -226,7 +286,7 @@ const Canvas = () => {
                                 socket.current?.emit("leave-room") ;
                                 setroomjoined(null) ;
 
-                            }}> Leave Board </button>
+                             }}> Leave Board </button>
                         </div>
                     </>
                     }

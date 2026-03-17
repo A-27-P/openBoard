@@ -21,11 +21,11 @@ interface Roomtype {
     owner : string, 
     collaborators : Set<string>
 }
-const rooms = new Map<string, Roomtype>() ;
+// const rooms = new Map<string, Roomtype>() ;
 
 const idTosocket = new Map() ;
 const socketToid = new Map() ;
-const idTorooms = new Map<string, string> () ;
+// const idTorooms = new Map<string, string> () ;
 
 
 export const initSocket = (io: Server) => {
@@ -37,12 +37,20 @@ export const initSocket = (io: Server) => {
         socket.data.userId = socket.handshake.auth.id ;
         // const roompresent = idTorooms.get(socket.data.userId) ;
         const roompresent = await redis.get(`user:${socket.data.userId}:room`) ;
-       
+        const owner = await redis.hGet(`room:${roompresent}`, "owner") ;
+        const owner_room = await redis.get(`user:${owner}:room`) ;
+
         if(roompresent) {
-            socket.emit("joined-room", (roompresent)) ;
-            
-            socket.join(roompresent) ;
-            socket.data.roomcode = roompresent ; 
+            if(owner_room === roompresent) {
+
+                socket.emit("joined-room", (roompresent)) ;
+                
+                socket.join(roompresent) ;
+                socket.data.roomcode = roompresent ; 
+            }
+            else {
+                await redis.del(`user:${socket.data.userId}:room`) ;
+            }
         }
 
        
@@ -57,11 +65,14 @@ export const initSocket = (io: Server) => {
 
         })
 
-        socket.on("undraw", async(invitecode) => {
+        socket.on("undraw", async(invitecode, strokeData) => {
             const userId = socketToid.get(socket.id) ;
             // const room = idTorooms.get(userId) ;
             const room = await redis.get(`user:${userId}:room`) ;
-           
+            if(strokeData?.points?.length !== 0) {
+                await redis.rPush(`room:${room}:strokes`, JSON.stringify(strokeData)) ;
+            }
+
             if(! room) return ;
             socket.to(room).emit("undraw") ;
         })
@@ -89,6 +100,7 @@ export const initSocket = (io: Server) => {
                 owner: socket.data.userId
             })
             await redis.sAdd(`room:${code}:collaborators`, socket.data.userId) ;
+            await redis.set(`user:${socket.data.userId}:room`, code) ;
             socket.data.roomcode = code ;
             // console.log(rooms) ;
             
@@ -134,7 +146,9 @@ export const initSocket = (io: Server) => {
             
             // idTorooms.set(userId, roomCode) ;
             await redis.set(`user:${userId}:room`, roomCode) ;
-            io.to(socketid).emit("joined-room", roomCode) ;
+            const strokes = await redis.lRange(`room:${roomCode}:strokes`, 0, -1) ;
+            const parsedStrokes = strokes.map(s => JSON.parse(s)) ;
+            io.to(socketid).emit("joined-room", roomCode, parsedStrokes) ;
 
         })
 
@@ -164,7 +178,8 @@ export const initSocket = (io: Server) => {
             
             
 
-        })
+        }) ;
+
 
 
 
