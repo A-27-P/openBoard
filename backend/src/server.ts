@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import {Server} from "socket.io"
 import { initSocket } from "./socket/socket.js"
 import connectDb from "./Config/mongoConfig.js"
+import { connectRedis } from "./Config/redisConfig.js"
 
 
 dotenv.config() 
@@ -23,8 +24,10 @@ const io = new Server(server, {
 
 
 try {
-    initSocket(io) ; 
+    connectRedis() ;
     connectDb() ;
+    initSocket(io) ; 
+
     server.listen(PORT, () => {
         console.log(`\n\n ------- Server is running on PORT: ${PORT}-------\n\n` )
     })
