@@ -68,14 +68,15 @@ const Canvas = () => {
         for(let i =0; i < (strokes.length); i ++) {
             
             ctxRef.current?.beginPath() ;
-            if(strokes[i].points.length === 0) continue ;
-            ctxRef.current?.moveTo(strokes[i].points[0].x, strokes[i].points[0].y) ;
+            if(! canvasRef.current) return ;
+            if(strokes[i] === null || strokes[i].points.length === 0 ) continue ;
+            ctxRef.current?.moveTo(canvasRef.current?.width * strokes[i].points[0].x,canvasRef.current.height* strokes[i].points[0].y) ;
             
             ctxRef.current.lineWidth = 5;
             ctxRef.current.lineCap = "round";
             ctxRef.current.strokeStyle = "white"
             for(let j = 1; j < strokes[i].points.length; j ++) {
-                ctxRef.current?.lineTo(strokes[i].points[j].x, strokes[i].points[j].y) ;
+                ctxRef.current?.lineTo(strokes[i].points[j].x* canvasRef.current.width, strokes[i].points[j].y * canvasRef.current.height) ;
             }
             ctxRef.current?.stroke() ;
 
@@ -185,10 +186,13 @@ const Canvas = () => {
         ctxRef.current?.beginPath();
         const { x, y } = getMousePos(e);
         ctxRef.current?.moveTo(x, y);
+        if( !canvasRef.current) return ;
+        
+
         currentStroke.current = {
             strokeColor:"white", 
             strokeWidth: 5, 
-            points : [{x, y}], 
+            points : [{x : x / canvasRef.current?.width, y: y/ canvasRef.current.height}], 
             madeBy: auth._id as string
         }
         socket.current?.emit("draw", { x, y });
@@ -200,10 +204,10 @@ const Canvas = () => {
         // console.log(e) ;
 
         // console.log("drawing");
-        if (!ctxRef.current) return;
+        if (!ctxRef.current || ! canvasRef.current) return;
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
-        currentStroke.current?.points.push({x, y}) ;
+        currentStroke.current?.points.push({x: x / canvasRef.current?.width, y: y / canvasRef.current.height}) ;
         ctxRef.current.stroke();
         socket.current?.emit("draw", { x, y, invitecode });
 

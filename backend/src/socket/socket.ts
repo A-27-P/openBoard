@@ -36,22 +36,23 @@ export const initSocket = (io: Server) => {
         console.log("User Connected",  socket.id) ;
         socket.data.userId = socket.handshake.auth.id ;
         // const roompresent = idTorooms.get(socket.data.userId) ;
-        const roompresent = await redis.get(`user:${socket.data.userId}:room`) ;
-        const owner = await redis.hGet(`room:${roompresent}`, "owner") ;
-        const owner_room = await redis.get(`user:${owner}:room`) ;
+        // const roompresent = await redis.get(`user:${socket.data.userId}:room`) ;
+        // const owner = await redis.hGet(`room:${roompresent}`, "owner") ;
+        // const owner_room = await redis.get(`user:${owner}:room`) ;
+        // const allrooms = await redis.get(`user:${socket.data.userId}:room`) ;
+        // console.log(`Rooms for the ${socket.data.userId} is : ${allrooms}`) ;
+        // if(roompresent) {
+        //     if(owner_room === roompresent) {
 
-        if(roompresent) {
-            if(owner_room === roompresent) {
-
-                socket.emit("joined-room", (roompresent)) ;
+        //         socket.emit("joined-room", (roompresent)) ;
                 
-                socket.join(roompresent) ;
-                socket.data.roomcode = roompresent ; 
-            }
-            else {
-                await redis.del(`user:${socket.data.userId}:room`) ;
-            }
-        }
+        //         socket.join(roompresent) ;
+        //         socket.data.roomcode = roompresent ; 
+        //     }
+        //     else {
+        //         await redis.del(`user:${socket.data.userId}:room`) ;
+        //     }
+        // }
 
        
         idTosocket.set(socket.data.userId, socket.id) ;
@@ -77,11 +78,12 @@ export const initSocket = (io: Server) => {
             socket.to(room).emit("undraw") ;
         })
         
-        socket.on("disconnect", (reason) => {
-            console.log("User disconnected because", reason) ;
+        socket.on("disconnect", async(reason) => {
+            console.log(`User ${socket.data.userId} disconnected because`, reason) ;
             const userId = socketToid.get(socket.id) ;
             socketToid.delete(socket.id) ;
             idTosocket.delete(userId) ;
+            await redis.del(`user:${userId}:room`) ;
 
 
         }) ;
@@ -171,8 +173,8 @@ export const initSocket = (io: Server) => {
             // room?.collaborators.delete(userId) ;
             // idTorooms.delete(userId) ;
             await redis.del(`user:${userId}:room`) ;
-            idTosocket.delete(userId) ;
-            socketToid.delete(socket.id) ;
+            // idTosocket.delete(userId) ;
+            // socketToid.delete(socket.id) ;
             socket.data.roomcode = undefined ;
 
             

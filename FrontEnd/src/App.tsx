@@ -1,4 +1,4 @@
-import {Routes, Route} from "react-router-dom"
+import {Routes, Route, Navigate} from "react-router-dom"
 import Canvas from "./Canvas/Canvas"
 import Signup from "./Auth/signup"
 import Login from "./Auth/login"
@@ -11,6 +11,7 @@ const App = () => {
       
       
       <Routes>
+        <Route path="/" element = {<Navigate to = "/login" /> }/> 
         <Route path="/login" element = {<PublicCompo > <Login/> </PublicCompo>} />
         <Route path = "/signup" element = {<PublicCompo><Signup/></PublicCompo>} /> 
         <Route path="/canvas" element = {<PrivateCompo> <Canvas/>  </PrivateCompo>} />
