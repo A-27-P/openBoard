@@ -50,8 +50,8 @@
 
 }
 .textinput input {
-    background-color: aliceblue;
-    border: none;
+    background-color: black;
+    border: 1px solid white;
     border-radius: 10px;
     width: 8rem;
     font-size: 20px;
@@ -59,13 +59,14 @@
     color: red;
     text-align: center;
     height: 1.5rem;
+    color: white;
     text-transform: uppercase;
 }
 .joinroombutton {
-    color: black;
-    background-color: white;
+    color: white;
+    background-color: black;
     font-size: 20px;
-    border-radius: 10px;
+    /* border-radius: 10px; */
     border: 1px solid white;
 
     padding: 4px;
@@ -75,9 +76,9 @@
 }
 .joinroombutton:hover {
 
-    border: 1px solid white;
-    background-color: black;
-    color: white;
+    border: 1px solid black;
+    background-color: white;
+    color: black;
 }
 
 
@@ -96,4 +97,25 @@
     right: 1rem;
     /* height: 10rem;
     width: 5rem; */
+}
+
+.room-joined-heading {
+    color: white;
+}
+
+.leave-room-button {
+    border: 1px solid white;
+    background-color: black;
+    color: white;
+    height: 2.7rem;
+    width: 10rem;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+}
+.leave-room-button:hover {
+    background-color: white;
+    color: black;
+    border: 1px solid black;
 }

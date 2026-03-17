@@ -23,6 +23,8 @@ interface Roomtype {
 
 const idTosocket = new Map() ;
 const socketToid = new Map() ;
+const idTorooms = new Map<string, string> () ;
+
 const rooms = new Map<string, Roomtype>() ;
 
 export const initSocket = (io: Server) => {
@@ -32,25 +34,41 @@ export const initSocket = (io: Server) => {
         
         console.log("User Connected",  socket.id) ;
         socket.data.userId = socket.handshake.auth.id ;
+        const roompresent = idTorooms.get(socket.data.userId) ;
+        console.log("room already present", roompresent) ;
+        if(roompresent) {
+            socket.emit("joined-room", (roompresent)) ;
+            console.log("room already present is: ", roompresent) ;
+            socket.join(roompresent) ;
+            socket.data.roomcode = roompresent ; 
+        }
+
         // console.log("✅",socket.handshake) ;
         idTosocket.set(socket.data.userId, socket.id) ;
-        idTosocket.set(socket.id, socket.data.userId) ;
+        socketToid.set(socket.id, socket.data.userId) ;
 
 
         socket.on("draw", (data) => {
             // console.log("Listened the draw event") ;
 
-            socket.to(data.invitecode).emit("draw", {x:data.x, y:data.y}) ;            
+            socket.to(socket.data.roomcode).emit("draw", {x:data.x, y:data.y}) ;            
 
         })
 
         socket.on("undraw", (invitecode) => {
-            socket.to(invitecode).emit("undraw") ;
+            const userId = socketToid.get(socket.id) ;
+            const room = idTorooms.get(userId) ;
+            // console.log("Room : " ,room ) ;
+            if(! room) return ;
+            socket.to(room).emit("undraw") ;
         })
         
         socket.on("disconnect", (reason) => {
             console.log("User disconnected because", reason) ;
-            
+            const userId = socketToid.get(socket.id) ;
+            socketToid.delete(socket.id) ;
+            idTosocket.delete(userId) ;
+
 
         }) ;
 
@@ -110,16 +128,36 @@ export const initSocket = (io: Server) => {
             usersocket.data.roomcode = roomCode ;
             usersocket?.join(roomCode) ;
             // console.log("inside the accept-request") ;
+            idTorooms.set(userId, roomCode) ;
             io.to(socketid).emit("joined-room", roomCode) ;
 
         })
 
         socket.on("reject-request", ({userId, roomCode}: {userId: string, roomCode: string}) => {
-            console.log(userId) ;
+            // console.log(userId) ;
             const socketid = idTosocket.get(userId) ;
             io.to(socketid).emit("not-joined-room",roomCode) ;
-        })
+        }) ;
 
+        socket.on("leave-room", () => {
+            const userId = socketToid.get(socket.id) ;
+            // console.log(userId) ;
+            // console.log(idTorooms) ;
+            const roomcode = idTorooms.get(userId) ;
+            // console.log("Te roomcode is : ",roomcode) ;
+            if(! roomcode) return ;
+            const room = rooms.get(roomcode) ;
+            socket.leave(roomcode) ;
+            room?.collaborators.delete(userId) ;
+            idTorooms.delete(userId) ;
+            idTosocket.delete(userId) ;
+            socketToid.delete(socket.id) ;
+            socket.data.roomcode = undefined ;
+
+            // console.log("leave room called") ;
+            
+
+        })
 
 
 

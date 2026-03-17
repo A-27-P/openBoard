@@ -26,7 +26,7 @@ try {
     initSocket(io) ; 
     connectDb() ;
     server.listen(PORT, () => {
-        console.log(`Server is running on PORT: ${PORT}` )
+        console.log(`\n\n ------- Server is running on PORT: ${PORT}-------\n\n` )
     })
 
 } catch(err) {

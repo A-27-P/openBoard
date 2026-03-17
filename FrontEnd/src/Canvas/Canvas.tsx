@@ -14,6 +14,7 @@ const Canvas = () => {
     const [invitecode, setinvitecode] = useState<string>("-");
     const [requests, setrequests] = useState<{userId : string, roomCode: string}[]>([])
     const socket = useSocket();
+    const [roomjoined, setroomjoined] = useState<string | null> (null) ;
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
     const getMousePos = (e: any) => {
@@ -66,10 +67,12 @@ const Canvas = () => {
             prevpoint.current = data;
         }
         const handleundraw = () => {
+             console.log("undraw fired .... ") ;
             prevpoint.current = null;
         }
 
         const setcode = (code: string) => {
+           
             setinvitecode(code);
         }
 
@@ -87,6 +90,7 @@ const Canvas = () => {
 
         const handleroomjoined = (roomCode: string) => {
             alert(`${roomCode} joined successfully`); 
+            setroomjoined(roomCode) ;
         }
 
         const handlenotjoined = (roomCode: string) => {
@@ -193,6 +197,11 @@ const Canvas = () => {
 
             <div className="canvas-header">
                 <div className="rooms-join">
+
+                    {roomjoined === null ? 
+
+
+                    <>
                     <div className="invite-code">
                         Invite Code: {invitecode}
                     </div>
@@ -206,6 +215,21 @@ const Canvas = () => {
                             Join Board
                         </div>
                     </div>
+                    </>
+                    : <>
+                        <div className="room-joined-heading">
+                            Room {roomjoined} joined.
+
+                        </div>
+                        <div className="left-room">
+                            <button className="leave-room-button" onClick={()=> {
+                                socket.current?.emit("leave-room") ;
+                                setroomjoined(null) ;
+
+                            }}> Leave Board </button>
+                        </div>
+                    </>
+                    }
 
                 </div>
 
