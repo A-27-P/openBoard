@@ -1,6 +1,8 @@
 import {Server} from "socket.io"
 import crypto from "crypto"
 import { redis } from "../Config/redisConfig.js"
+import { strokeQueue } from "../Config/queue.js"
+
 
 
 function generateCode() {
@@ -72,6 +74,12 @@ export const initSocket = (io: Server) => {
             const room = await redis.get(`user:${userId}:room`) ;
             if(strokeData?.points?.length !== 0) {
                 await redis.rPush(`room:${room}:strokes`, JSON.stringify(strokeData)) ;
+                await strokeQueue.add("flush-strokes", {
+                    room: room, 
+                    ...strokeData
+                }) ;
+                console.log("in the undraw backend", strokeData?.points ) ;
+                
             }
 
             if(! room) return ;
