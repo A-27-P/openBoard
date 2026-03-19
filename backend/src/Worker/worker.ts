@@ -1,12 +1,18 @@
 import {Worker} from "bullmq" 
-import { bullredis } from "../Config/bullRedis.js";
+import { processRoom } from "./Jobs.js";
+import { connectRedis } from "../Config/redisConfig.js";
+
+
+connectRedis() ;
 
 const worker = new Worker("stokequeue", 
-    async(job) => {
+    async(job) => { 
+        if(job.name === "flush-strokes") {
+            
+            processRoom(job.data.room)
 
-    console.log(job) ;
-    // console.log(`\n Worker is doing the job : ${...job},   data: ${job.data} \n`) ;
-           
+
+        }
     }, {
         connection: {
             host: "127.0.0.1" , 
@@ -17,12 +23,12 @@ const worker = new Worker("stokequeue",
 
 
 worker.on("completed", (job) => {
-    console.log(`\n\n The ${job} is done \n\n`) ;
+    console.log(`\n\n The ${job.name} is done \n\n`) ;
 })
 
 
 worker.on("failed", (job) => {
-    console.log(`\n\n The ${job} is Failed \n\n`) ;
+    console.log(`\n\n The ${job?.name} is Failed \n\n`) ;
 })
 
 console.log("\n -------Worker is running---------- \n")

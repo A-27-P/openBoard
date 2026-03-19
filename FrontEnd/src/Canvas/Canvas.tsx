@@ -217,7 +217,7 @@ const Canvas = () => {
         isDrawing.current = (false);
         console.log("Drawing Stopped");
         if(currentStroke.current)
-            socket.current?.emit("undraw", invitecode, currentStroke.current);
+            socket.current?.emit("undraw", invitecode, currentStroke.current) ;
         currentStroke.current = null;
     }
 

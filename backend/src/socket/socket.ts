@@ -71,19 +71,29 @@ export const initSocket = (io: Server) => {
         socket.on("undraw", async(invitecode, strokeData) => {
             const userId = socketToid.get(socket.id) ;
             // const room = idTorooms.get(userId) ;
-            const room = await redis.get(`user:${userId}:room`) ;
             if(strokeData?.points?.length !== 0) {
+                const room = await redis.get(`user:${userId}:room`) ;
+                const order = await redis.incr(`room:${room}:counter`) ;
+            strokeData = {
+                ...strokeData, 
+                boardId: invitecode,
+                order:order
+            }
                 await redis.rPush(`room:${room}:strokes`, JSON.stringify(strokeData)) ;
                 await strokeQueue.add("flush-strokes", {
                     room: room, 
-                    ...strokeData
+
+                    // ...strokeData
                 }) ;
-                console.log("in the undraw backend", strokeData?.points ) ;
+                
+
+                // console.log(await strokeQueue.getJobs()) ;
+                // console.log("\n\n The total job count : \n",await strokeQueue.getJobCounts()) ;
+                if(! room) return ;
+                socket.to(room).emit("undraw") ;
                 
             }
 
-            if(! room) return ;
-            socket.to(room).emit("undraw") ;
         })
         
         socket.on("disconnect", async(reason) => {
