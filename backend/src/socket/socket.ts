@@ -60,7 +60,7 @@ export const initSocket = (io: Server) => {
 
 
         socket.on("draw", (data) => {
-            
+            socket.emit("le bc",)
 
             socket.to(socket.data.roomcode).emit("draw", {x:data.x, y:data.y}) ;            
 
