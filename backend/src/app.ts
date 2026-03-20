@@ -2,6 +2,7 @@ import express from "express"
 import type {Request, Response, Application} from "express" 
 import cors from "cors"
 import authRoutes from "./Auth/auth.routes.js"
+import boardRoutes from "./Board/board.routes.js"
 import cookieParser from "cookie-parser"
 const app: Application = express() ;
 
@@ -24,6 +25,7 @@ app.get("/", (req: Request, res: Response) => {
 
 
 app.use("/auth", authRoutes) ;
+app.use("/board", boardRoutes) ;
 
 
 

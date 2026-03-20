@@ -7,13 +7,12 @@ export default function PublicCompo ({children}: {children: React.ReactNode}): R
     
     
     if(auth?.loading) return <>wait</>
+    console.log(auth) ;
     if(auth?.islogin) {
         navigate("/canvas") ;
         return  ;
     }
+
     return children;
-
-
-
 
 }

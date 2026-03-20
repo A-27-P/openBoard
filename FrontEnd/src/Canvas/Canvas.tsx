@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { useSocket } from "../Socket/socket"
 import PopUp from "./PopUp";
 import { useAuth } from "../AuthContext/authcontext";
-
+import { createNewBoard } from "../Services/api";
 interface point {
     x: number,
     y: number
@@ -33,8 +33,7 @@ const Canvas = () => {
     const [roomjoined, setroomjoined] = useState<string | null>(null);
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-
-
+    const [boardId, setboardId] = useState<string | null>(null) ;
 
 
     const getMousePos = (e: any) => {
@@ -239,8 +238,13 @@ const Canvas = () => {
     }, [])
 
     useEffect(() => {
-        socket.current?.emit("create-board");
-    }, [])
+        
+        (async() => {
+            const boardId = await createNewBoard() ;
+            setboardId(boardId) ;
+        })() ;
+
+    }, [auth.loading, auth._id]) ;
 
     const joinroomfun = () => {
         if (codeinpout.length !== 6) {
@@ -318,14 +322,20 @@ const Canvas = () => {
 
 
 
+            { boardId ? 
 
-            <canvas className="canvas"
+
+                <canvas className="canvas"
                 onMouseDown={startDrawing}
                 onMouseMove={drawing}
                 onMouseUp={stopDrawing}
                 onMouseLeave={stopDrawing}
                 ref={canvasRef}
-            />
+                /> :
+                <div className="loading-screen">
+                    Loading Board....
+                </div>
+            }
 
 
 

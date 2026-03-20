@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken"
 export interface CustomRequest extends Request {
   user ? : {
     email: string,
-    _id : string
+    id : string
   }
 }
 
@@ -12,6 +12,9 @@ export const authMiddleware = async(req: CustomRequest, res:Response, next: Next
     try {
 
         const token = req.cookies.token;
+
+
+
 
         if(! token) {
             res.status(401).json("You are not authorized.") ;
@@ -24,6 +27,10 @@ export const authMiddleware = async(req: CustomRequest, res:Response, next: Next
         
 
         req.user = userdata;
+        if(! userdata.id ) {
+            res.status(401).json("You are not authorized.") ;
+            return ;
+        }
         
         next() ;
         

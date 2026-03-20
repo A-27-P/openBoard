@@ -119,3 +119,15 @@
     color: black;
     border: 1px solid black;
 }
+
+.loading-screen {
+    height: 100%;
+    width: 100%;
+    color: white;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 25px;
+    
+}

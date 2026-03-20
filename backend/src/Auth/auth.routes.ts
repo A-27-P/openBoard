@@ -6,6 +6,6 @@ const router = Router() ;
 
 router.post("/signup", controller.signup) ;
 router.post("/signin", controller.signin) ;
-router.get("/checkme", authMiddleware, controller.userInfo) 
+router.get("/checkme", authMiddleware, controller.userInfo) ;
 
 export default router ;

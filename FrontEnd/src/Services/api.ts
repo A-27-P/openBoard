@@ -37,3 +37,19 @@ export const loginapi = async(email: string, password: string) => {
     throw new Error (err as string) ;
   }
 }
+
+
+export const createNewBoard = async() => {
+  try {
+    const response = await myapi.post("/board") ;
+
+
+    const boardid = response.data.data ;
+    return boardid ;
+
+
+  } catch(err){
+
+    throw new Error(err as string) ;
+  }
+}
