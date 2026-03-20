@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from "react"
 import { useSocket } from "../Socket/socket"
 import PopUp from "./PopUp";
 import { useAuth } from "../AuthContext/authcontext";
-import { createNewBoard } from "../Services/api";
+import { createNewBoard, addCollaborator } from "../Services/api";
 interface point {
     x: number,
     y: number
 }
 
 interface Stroke {
+    boardId: string
     strokeWidth: number,
     strokeColor: string,
     madeBy: string,
@@ -33,7 +34,7 @@ const Canvas = () => {
     const [roomjoined, setroomjoined] = useState<string | null>(null);
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-    const [boardId, setboardId] = useState<string | null>(null) ;
+    const [boardId, setboardId] = useState<string | null>(null);
 
 
     const getMousePos = (e: any) => {
@@ -85,13 +86,16 @@ const Canvas = () => {
     }
 
 
-    const acceptrequest = (userId: string, roomCode: string) => {
+    const acceptrequest = async (userId: string, roomCode: string) => {
         const data = {
             userId,
             roomCode
         }
+
         socket.current?.emit("accept-request", data)
+        await addCollaborator(userId);
         setrequests(requests.filter((item) => item.userId !== userId));
+
     }
     const rejectrequest = (userId: string, roomCode: string) => {
 
@@ -192,8 +196,10 @@ const Canvas = () => {
             strokeColor: "white",
             strokeWidth: 5,
             points: [{ x: x / canvasRef.current?.width, y: y / canvasRef.current.height }],
-            madeBy: auth._id as string
+            madeBy: auth._id as string,
+            boardId:boardId || ""
         }
+        
         socket.current?.emit("draw", { x, y });
     }
 
@@ -202,12 +208,13 @@ const Canvas = () => {
         if (!isDrawing.current) return;
         // console.log(e) ;
 
-        // console.log("drawing");
         if (!ctxRef.current || !canvasRef.current) return;
+        console.log("drawing");
         const { x, y } = getMousePos(e);
         ctxRef.current.lineTo(x, y);
         currentStroke.current?.points.push({ x: x / canvasRef.current?.width, y: y / canvasRef.current.height });
         ctxRef.current.stroke();
+        console.log("the currnet stroke is: ", currentStroke.current) ;
         socket.current?.emit("draw", { x, y, invitecode });
 
     }
@@ -215,36 +222,47 @@ const Canvas = () => {
     const stopDrawing = () => {
         isDrawing.current = (false);
         console.log("Drawing Stopped");
-        if(currentStroke.current)
-            socket.current?.emit("undraw", invitecode, currentStroke.current) ;
+        if (currentStroke.current) {
+            currentStroke.current = {
+                ...currentStroke.current,
+                boardId: boardId || ""
+
+            }
+            
+            socket.current?.emit("undraw", invitecode, currentStroke.current);
+        }
         currentStroke.current = null;
     }
 
 
     useEffect(() => {
         const canvas = canvasRef.current;
+
         if (!canvas) return;
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         const ctx = canvas.getContext("2d");
+        console.log("the cts beforecurrent is called :", ctx) ;
         if (!ctx) return;
 
         ctx.lineWidth = 5;
         ctx.lineCap = "round";
         ctx.strokeStyle = "white"
 
+        console.log("the cts current is called :", ctx) ;
+
         ctxRef.current = ctx;
 
-    }, [])
+    }, [boardId])
 
     useEffect(() => {
-        
-        (async() => {
-            const boardId = await createNewBoard() ;
-            setboardId(boardId) ;
-        })() ;
+        socket.current?.emit("create-board") ;
+        (async () => {
+            const boardId = await createNewBoard();
+            setboardId(boardId);
+        })();
 
-    }, [auth.loading, auth._id]) ;
+    }, [auth.loading, auth._id]);
 
     const joinroomfun = () => {
         if (codeinpout.length !== 6) {
@@ -321,16 +339,16 @@ const Canvas = () => {
             </div>
 
 
-
-            { boardId ? 
+                    
+            {boardId ?
 
 
                 <canvas className="canvas"
-                onMouseDown={startDrawing}
-                onMouseMove={drawing}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                ref={canvasRef}
+                    onMouseDown={startDrawing}
+                    onMouseMove={drawing}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    ref={canvasRef}
                 /> :
                 <div className="loading-screen">
                     Loading Board....

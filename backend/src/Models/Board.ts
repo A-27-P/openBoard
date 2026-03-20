@@ -9,7 +9,8 @@ const boardSchema = new mongoose.Schema({
     owner: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
+        required: true,
+        unique: true
     },
     collaborators: [{
         type: mongoose.Schema.Types.ObjectId,

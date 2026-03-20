@@ -76,19 +76,17 @@ export const initSocket = (io: Server) => {
                 const order = await redis.incr(`room:${room}:counter`) ;
             strokeData = {
                 ...strokeData, 
-                boardId: invitecode,
                 order:order
             }
                 await redis.rPush(`room:${room}:strokes`, JSON.stringify(strokeData)) ;
                 await strokeQueue.add("flush-strokes", {
                     room: room, 
 
-                    // ...strokeData
+                
                 }) ;
                 
 
-                // console.log(await strokeQueue.getJobs()) ;
-                // console.log("\n\n The total job count : \n",await strokeQueue.getJobCounts()) ;
+                
                 if(! room) return ;
                 socket.to(room).emit("undraw") ;
                 

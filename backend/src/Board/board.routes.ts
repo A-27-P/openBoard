@@ -6,7 +6,7 @@ const router = Router() ;
 
 
 router.post("/", authMiddleware ,controller.createBoard) ;
-
+router.post("/addcollab",authMiddleware, controller.addCollaborator) ;
 
 
 export default router ;
