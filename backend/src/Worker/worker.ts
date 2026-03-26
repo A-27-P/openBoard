@@ -1,9 +1,12 @@
 import {Worker} from "bullmq" 
 import { processRoom } from "./Jobs.js";
 import { connectRedis } from "../Config/redisConfig.js";
+import connectDb from "../Config/mongoConfig.js";
+import dotenv from "dotenv"
 
-
+dotenv.config() ;
 connectRedis() ;
+connectDb() ;
 
 const worker = new Worker("stokequeue", 
     async(job) => { 

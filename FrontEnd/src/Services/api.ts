@@ -63,11 +63,8 @@ export const addCollaborator = async (userId: string) => {
       }
     );
 
+    return ;
     
-
-
-
-
   } catch (err) {
     throw new Error(err as string);
   }

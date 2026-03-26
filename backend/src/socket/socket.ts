@@ -78,6 +78,7 @@ export const initSocket = (io: Server) => {
                 ...strokeData, 
                 order:order
             }
+            // console.log(strokeData) ;
                 await redis.rPush(`room:${room}:strokes`, JSON.stringify(strokeData)) ;
                 await strokeQueue.add("flush-strokes", {
                     room: room, 
